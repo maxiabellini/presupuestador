@@ -1,0 +1,16 @@
+framework:
+  secret: '%env(APP_SECRET)%'
+  csrf_protection: true
+  http_method_override: false
+  handle_all_throwables: true
+  session: true
+  php_errors: { log: true }
+  router: { utf8: true }
+  validation: { email_validation_mode: html5 }
+  default_locale: es
+
+when@test:
+  framework:
+    test: true
+    session:
+      storage_factory_id: session.storage.factory.mock_file

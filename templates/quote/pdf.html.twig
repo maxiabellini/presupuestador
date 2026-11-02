@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Presupuesto {{ quote.number }}</title>
+    <style>
+        @page { margin: 28mm 14mm 20mm; }
+        * { box-sizing: border-box; }
+        body { color: #493c3c; font-family: "DejaVu Sans", sans-serif; font-size: 9px; line-height: 1.35; }
+        header { border-bottom: 2px solid #d78894; left: 0; padding-bottom: 10px; position: fixed; right: 0; top: -20mm; }
+        .brand { color: #9d4f60; font-size: 20px; font-weight: bold; }
+        .subtitle { color: #8a7777; font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .document-title { float: right; text-align: right; }
+        .document-title strong { color: #493c3c; display: block; font-size: 15px; }
+        .document-title span { color: #9d4f60; font-size: 10px; font-weight: bold; }
+        footer { border-top: 1px solid #ead7da; bottom: -13mm; color: #897777; font-size: 7px; left: 0; padding-top: 5px; position: fixed; right: 0; text-align: center; }
+        h2 { color: #9d4f60; font-size: 11px; margin: 14px 0 5px; text-transform: uppercase; }
+        .meta { background: #fbf4f5; border: 1px solid #ead7da; border-radius: 5px; margin-bottom: 10px; padding: 9px; width: 100%; }
+        .meta td { padding: 2px 5px; vertical-align: top; width: 50%; }
+        .label { color: #8a7777; font-size: 7px; text-transform: uppercase; }
+        .value { font-size: 10px; font-weight: bold; }
+        table.lines { border-collapse: collapse; margin-bottom: 8px; width: 100%; }
+        table.lines th { background: #9d4f60; color: #fff; font-size: 7px; padding: 5px 4px; text-align: left; text-transform: uppercase; }
+        table.lines td { border-bottom: 1px solid #eadfe1; padding: 5px 4px; vertical-align: top; }
+        table.lines tr:nth-child(even) td { background: #fdf9fa; }
+        .number { text-align: right; white-space: nowrap; }
+        .product { page-break-inside: avoid; }
+        .product-heading { background: #f3dfe2; border-left: 4px solid #d78894; font-size: 10px; font-weight: bold; margin-top: 10px; padding: 6px 8px; }
+        .product-heading span { float: right; }
+        .product-meta { color: #705e5e; font-size: 8px; padding: 4px 8px; }
+        .empty { color: #8a7777; font-style: italic; padding: 8px 0; }
+        .summary { border-collapse: collapse; margin-left: 48%; margin-top: 12px; width: 52%; }
+        .summary td { border-bottom: 1px solid #eadfe1; padding: 4px 6px; }
+        .summary .total td { background: #493c3c; color: #fff; font-size: 11px; font-weight: bold; }
+        .summary .final td { background: #d78894; color: #fff; font-size: 13px; font-weight: bold; }
+        .notes { background: #fffaf2; border: 1px solid #eee0c4; margin-top: 12px; padding: 8px; }
+        .muted { color: #8a7777; }
+    </style>
+</head>
+<body>
+<header>
+    <div class="document-title"><strong>Presupuesto</strong><span>{{ quote.number }}</span></div>
+    <div class="brand">Jazmín Pastelería</div>
+    <div class="subtitle">Pastelería artesanal</div>
+</header>
+
+<footer>
+    Documento generado el {{ generatedAt|date('d/m/Y H:i') }} · Los valores corresponden al presupuesto guardado {{ quote.number }}.
+</footer>
+
+<main>
+    {% set statusLabels = {draft: 'Borrador', sent: 'Enviado', accepted: 'Aceptado', rejected: 'Rechazado'} %}
+    <table class="meta">
+        <tr>
+            <td><div class="label">Cliente / referencia</div><div class="value">{{ quote.customerName }}</div></td>
+            <td><div class="label">Estado</div><div class="value">{{ statusLabels[quote.status] ?? quote.status }}</div></td>
+        </tr>
+        <tr>
+            <td><div class="label">Fecha</div><div class="value">{{ quote.createdAt|date('d/m/Y') }}</div></td>
+            <td><div class="label">Válido hasta</div><div class="value">{{ quote.validUntil ? quote.validUntil|date('d/m/Y') : 'Sin vencimiento' }}</div></td>
+        </tr>
+    </table>
+
+    <h2>Detalle de productos</h2>
+    {% for item in quote.items %}
+        <section class="product">
+            <div class="product-heading">
+                {{ item.name }} · Cantidad: {{ item.quantity|number_format(2, ',', '.') }}
+                <span>Subtotal $ {{ item.totalCost|number_format(2, ',', '.') }}</span>
+            </div>
+            <div class="product-meta">
+                Rendimiento base: {{ item.yieldQuantity|number_format(2, ',', '.') }} {{ item.yieldUnit ? item.yieldUnit.symbol : '' }}
+                · Costo por producto: $ {{ (item.totalCost / item.quantity)|number_format(2, ',', '.') }}
+                {% if item.salePrice is not null %}· Precio de venta individual: $ {{ item.salePrice|number_format(2, ',', '.') }}{% endif %}
+            </div>
+            {% if item.ingredients is not empty %}
+                <table class="lines">
+                    <thead>
+                    <tr><th>Concepto</th><th>Categoría</th><th class="number">Cantidad total</th><th class="number">Precio unitario</th><th class="number">Subtotal</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for line in item.ingredients %}
+                        <tr>
+                            <td>{{ line.ingredientName }}</td>
+                            <td>{{ line.categoryType == 'material' ? 'Material' : 'Ingrediente' }}</td>
+                            <td class="number">{{ (line.quantity * item.quantity)|number_format(3, ',', '.') }} {{ line.unitSymbol }}</td>
+                            <td class="number">$ {{ (line.lineCost / line.quantity)|number_format(2, ',', '.') }} / {{ line.unitSymbol }}</td>
+                            <td class="number">$ {{ (line.lineCost * item.quantity)|number_format(2, ',', '.') }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty">Este producto no tiene componentes detallados.</div>
+            {% endif %}
+        </section>
+    {% else %}
+        <div class="empty">El presupuesto no tiene productos cargados.</div>
+    {% endfor %}
+
+    <h2>Mano de obra y gastos adicionales</h2>
+    {% set enabledCosts = quote.additionalCosts|filter(cost => cost.enabled) %}
+    {% if enabledCosts is not empty %}
+        <table class="lines">
+            <thead>
+            <tr><th>Concepto</th><th>Tipo</th><th class="number">Cantidad</th><th class="number">Tarifa</th><th class="number">Subtotal</th></tr>
+            </thead>
+            <tbody>
+            {% for cost in enabledCosts %}
+                <tr>
+                    <td>{{ cost.name }}</td>
+                    <td>{{ cost.labor ? 'Mano de obra' : 'Gasto adicional' }}</td>
+                    <td class="number">{{ cost.quantity|number_format(3, ',', '.') }}</td>
+                    <td class="number">$ {{ cost.rateSnapshot|number_format(2, ',', '.') }}</td>
+                    <td class="number">$ {{ cost.amount|number_format(2, ',', '.') }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty">No se aplicaron gastos adicionales.</div>
+    {% endif %}
+
+    <table class="summary">
+        <tr><td>Ingredientes</td><td class="number">$ {{ quote.ingredientCost|number_format(2, ',', '.') }}</td></tr>
+        <tr><td>Materiales</td><td class="number">$ {{ quote.materialCost|number_format(2, ',', '.') }}</td></tr>
+        <tr><td>Mano de obra</td><td class="number">$ {{ quote.laborCost|number_format(2, ',', '.') }}</td></tr>
+        <tr><td>Otros gastos</td><td class="number">$ {{ quote.additionalCostTotal|number_format(2, ',', '.') }}</td></tr>
+        <tr class="total"><td>Costo total</td><td class="number">$ {{ quote.totalCost|number_format(2, ',', '.') }}</td></tr>
+        <tr><td>Precio sugerido ({{ quote.profitPercentage|number_format(2, ',', '.') }}%)</td><td class="number">$ {{ quote.suggestedPrice|number_format(2, ',', '.') }}</td></tr>
+        <tr class="final"><td>Precio final</td><td class="number">$ {{ quote.finalPrice|number_format(2, ',', '.') }}</td></tr>
+        <tr><td>Margen resultante</td><td class="number">{{ quote.resultingMargin|number_format(2, ',', '.') }}%</td></tr>
+    </table>
+
+    {% if quote.notes %}
+        <div class="notes"><strong>Notas</strong><br>{{ quote.notes|nl2br }}</div>
+    {% endif %}
+</main>
+</body>
+</html>

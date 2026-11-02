@@ -1,0 +1,4 @@
+<?php
+namespace App\Controller\Admin;
+use App\Entity\IngredientCategory; use App\Enum\CategoryType; use EasyCorp\Bundle\EasyAdminBundle\Config\Crud; use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController; use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField; use EasyCorp\Bundle\EasyAdminBundle\Field\IdField; use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+class IngredientCategoryCrudController extends AbstractCrudController { public static function getEntityFqcn(): string{return IngredientCategory::class;} public function configureCrud(Crud $crud): Crud{return $crud->setEntityLabelInSingular('Categoría')->setEntityLabelInPlural('Categorías');} public function configureFields(string $p): iterable {yield IdField::new('id')->onlyOnIndex();yield TextField::new('name','Nombre');yield ChoiceField::new('type','Tipo')->setChoices(['Ingrediente'=>CategoryType::INGREDIENT,'Material / embalaje'=>CategoryType::MATERIAL]);} }

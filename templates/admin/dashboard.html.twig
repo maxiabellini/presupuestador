@@ -1,0 +1,11 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% block page_title %}Panel principal{% endblock %}
+{% block main %}
+<section class="hero-panel"><div><p class="eyebrow">TU NEGOCIO, CON NÚMEROS CLAROS</p><h1>¿Qué vamos a preparar hoy?</h1><p>Actualizá precios una sola vez y todos tus cálculos quedarán listos para recalcular.</p></div><img class="hero-logo" src="{{ asset('images/logo-dulce-costo.png') }}" alt="Logo de Jazmín Pastelería"></section>
+<div class="quick-grid">
+<a class="quick-card coral" href="{{ ea_url().setController('App\\Controller\\Admin\\QuoteCrudController').setAction('new') }}"><span>＋</span><strong>Nuevo presupuesto</strong><small>Armá una propuesta con varios productos.</small></a>
+<a class="quick-card" href="{{ ea_url().setController('App\\Controller\\Admin\\RecipeCrudController').setAction('new') }}"><span>🍰</span><strong>Nueva receta</strong><small>Calculá ingredientes y rendimiento.</small></a>
+<a class="quick-card" href="{{ ea_url().setController('App\\Controller\\Admin\\IngredientCrudController').setAction('index') }}"><span>🧺</span><strong>Actualizar insumos</strong><small>Mantené los precios al día.</small></a>
+</div>
+<section class="explain-card"><h2>Cómo funciona el precio sugerido</h2><p>El sistema separa ingredientes, materiales, mano de obra y gastos. Podés elegir entre <strong>recargo sobre costo</strong> o <strong>margen sobre venta</strong>; no son lo mismo y la fórmula se muestra en cada presupuesto.</p><p>Los importes quedan congelados al guardar. “Recalcular con precios actuales” es siempre una acción explícita.</p></section>
+{% endblock %}
